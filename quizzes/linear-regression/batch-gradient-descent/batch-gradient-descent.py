@@ -1,9 +1,5 @@
 import numpy as np
 
-# Setting a random seed, feel free to change it and see different solutions.
-np.random.seed(42)
-
-
 def MSEStep(X, y, W, b, learn_rate=0.005):
     """
     This function implements the gradient descent step for squared error as a
