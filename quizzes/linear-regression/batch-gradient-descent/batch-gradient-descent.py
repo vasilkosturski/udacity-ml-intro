@@ -27,8 +27,7 @@ def MSEStep(X, y, W, b, learn_rate=0.005):
     return W_new, b_new
 
 
-# The parts of the script below will be run when you press the "Test Run"
-# button. The gradient descent step will be performed multiple times on
+# The gradient descent step will be performed multiple times on
 # the provided dataset, and the returned list of regression coefficients
 # will be plotted.
 def miniBatchGD(X, y, batch_size=20, learn_rate=0.005, num_iter=25):
