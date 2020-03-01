@@ -12,4 +12,4 @@ poly_feat = PolynomialFeatures(degree=4)
 X_poly = poly_feat.fit_transform(X)
 
 # Make and fit the polynomial regression model
-poly_model = LinearRegression(fit_intercept = False).fit(X_poly, y)
+poly_model = LinearRegression(fit_intercept=False).fit(X_poly, y)
