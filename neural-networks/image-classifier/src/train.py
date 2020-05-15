@@ -5,6 +5,7 @@ import sys
 def main():
     args = train_args.get_args()
     print(args.data_directory)
+    print(args.save_dir)
 
 
 if __name__ == '__main__':
