@@ -57,5 +57,4 @@ def get_args():
                         default=1,
                         type=int)
 
-    parser.parse_args()
-    return parser
+    return parser.parse_args()
