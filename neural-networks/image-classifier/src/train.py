@@ -35,11 +35,13 @@ def main():
     # Start with CPU
     device = torch.device("cpu")
 
+    print("Cuda: " + str(torch.cuda.is_available()))
+
     # Requested GPU
     if args.use_gpu and torch.cuda.is_available():
         device = torch.device("cuda:0")
     else:
-        print("GPU is not available. Using CPU.")
+        print("Using CPU.")
 
     # TODO [VK]: Select the training model based on input
     model = models.vgg16(pretrained=True)
