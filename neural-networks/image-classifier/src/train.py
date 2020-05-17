@@ -67,17 +67,16 @@ def main():
     model.to(device)
 
     # TODO [VK]: These should also be configs right
-    epochs = 1
     steps = 0
     running_loss = 0
     print_every = 5
-    for epoch in range(epochs):
+    for epoch in range(args.epochs):
         e_loss = 0
         prev_chk = 0
         total = 0
         correct = 0
         print(f'\nEpoch {epoch + 1} of {args.epochs}\n----------------------------')
-        for ii, (images, labels) in enumerate(training_dataloader):
+        for batch_index, (images, labels) in enumerate(training_dataloader):
             # Move images and labeles perferred device
             # if they are not already there
             images = images.to(device)
@@ -104,12 +103,12 @@ def main():
 
             # Keep a running total of loss for
             # this epoch
-            itr = (ii + 1)
+            itr = (batch_index + 1)
             if itr % print_every == 0:
                 avg_loss = f'avg. loss: {e_loss / itr:.4f}'
                 acc = f'accuracy: {(correct / total) * 100:.2f}%'
                 print(f'  Batches {prev_chk:03} to {itr:03}: {avg_loss}, {acc}.')
-                prev_chk = (ii + 1)
+                prev_chk = (batch_index + 1)
 
     print('Saving')
 
