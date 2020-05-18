@@ -1,11 +1,7 @@
 import sys
-import os
-import json
 import train_args
 import torch
-import torchvision
 
-from collections import OrderedDict
 from torchvision import models
 from torch import nn, optim
 from torchvision import datasets, transforms
@@ -44,17 +40,19 @@ def main():
         print("Using CPU.")
 
     # TODO [VK]: Select the training model based on input
-    model = models.vgg16(pretrained=True)
+    model = models.__dict__[args.arch](pretrained=True)
+
+    input_size = model.classifier[0].in_features
 
     # Freeze parameters so we don't backprop through them
     for param in model.parameters():
         param.requires_grad = False
 
     # TODO [VK] These should become dynamic
-    model_classifier = nn.Sequential(nn.Linear(25088, 1000),
+    model_classifier = nn.Sequential(nn.Linear(input_size, args.hidden_units),
                                      nn.ReLU(),
                                      nn.Dropout(0.5),
-                                     nn.Linear(1000, 102),
+                                     nn.Linear(args.hidden_units, 102),
                                      nn.LogSoftmax(dim=1))
 
     model.classifier = model_classifier
@@ -62,11 +60,10 @@ def main():
     criterion = nn.NLLLoss()
 
     # Only train the classifier parameters, feature parameters are frozen
-    optimizer = optim.Adam(model.classifier.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.classifier.parameters(), lr=args.learning_rate)
 
     model.to(device)
 
-    # TODO [VK]: These should also be configs right
     print_every = 5
     for epoch in range(args.epochs):
         e_loss = 0
@@ -120,7 +117,7 @@ def main():
                   'state_dict': model.state_dict(),
                   'class_to_idx': model.class_to_idx}
 
-    torch.save(checkpoint, 'checkpoint.pth')
+    torch.save(checkpoint, f'{args.save_dir}/checkpoint_cli.pth')
 
 
 if __name__ == '__main__':
