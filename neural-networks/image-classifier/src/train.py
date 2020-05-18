@@ -67,8 +67,6 @@ def main():
     model.to(device)
 
     # TODO [VK]: These should also be configs right
-    steps = 0
-    running_loss = 0
     print_every = 5
     for epoch in range(args.epochs):
         e_loss = 0
