@@ -47,9 +47,8 @@ def get_args():
     parser.add_argument('--hidden_units', '-hu',
                         action="store",
                         dest="hidden_units",
-                        default=[3136, 784],
-                        type=int,
-                        nargs='+')
+                        default=1000,
+                        type=int)
 
     parser.add_argument('--epochs',
                         action="store",

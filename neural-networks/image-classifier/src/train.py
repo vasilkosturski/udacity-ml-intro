@@ -24,6 +24,11 @@ def main():
                                            transforms.ToTensor(),
                                            transforms.Normalize(means, std)])
 
+    valid_transforms = transforms.Compose([transforms.Resize(255),
+                                           transforms.CenterCrop(224),
+                                           transforms.ToTensor(),
+                                           transforms.Normalize(means, std)])
+
     training_dataset = datasets.ImageFolder(args.data_directory, transform=train_transforms)
 
     training_dataloader = torch.utils.data.DataLoader(training_dataset, batch_size=batch_size, shuffle=True)
@@ -64,23 +69,21 @@ def main():
 
     model.to(device)
 
+    # TODO The training loss, validation loss, and validation accuracy are printed out as a network trains
+
     print_every = 5
     for epoch in range(args.epochs):
-        e_loss = 0
+        epoch_loss = 0
         prev_chk = 0
         total = 0
         correct = 0
         print(f'\nEpoch {epoch + 1} of {args.epochs}\n----------------------------')
         for batch_index, (images, labels) in enumerate(training_dataloader):
-            # Move images and labeles perferred device
-            # if they are not already there
             images = images.to(device)
             labels = labels.to(device)
 
-            # Set gradients of all parameters to zero.
             optimizer.zero_grad()
 
-            # Propigate forward and backward
             outputs = model.forward(images)
 
             loss = criterion(outputs, labels)
@@ -89,7 +92,7 @@ def main():
 
             # Keep a running total of loss for
             # this epoch
-            e_loss += loss.item()
+            epoch_loss += loss.item()
 
             # Accuracy
             _, predicted = torch.max(outputs.data, 1)
@@ -100,17 +103,17 @@ def main():
             # this epoch
             itr = (batch_index + 1)
             if itr % print_every == 0:
-                avg_loss = f'avg. loss: {e_loss / itr:.4f}'
+                avg_loss = f'avg. loss: {epoch_loss / itr:.4f}'
                 acc = f'accuracy: {(correct / total) * 100:.2f}%'
                 print(f'  Batches {prev_chk:03} to {itr:03}: {avg_loss}, {acc}.')
                 prev_chk = (batch_index + 1)
 
     print('Saving')
 
-    checkpoint = {'input_size': 25088,
+    checkpoint = {'input_size': input_size,
                   'output_size': 102,
-                  'arch': 'vgg16',
-                  'learning_rate': 0.001,
+                  'arch': args.arch,
+                  'learning_rate': args.learning_rate,
                   'batch_size': 64,
                   'classifier': model_classifier,
                   'optimizer': optimizer.state_dict(),
