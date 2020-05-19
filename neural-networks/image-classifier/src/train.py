@@ -10,8 +10,6 @@ from torch.utils.data import DataLoader
 
 def main():
     args = train_args.get_args()
-    print(args.data_directory)
-    print(args.save_dir)
 
     means = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
@@ -29,9 +27,15 @@ def main():
                                            transforms.ToTensor(),
                                            transforms.Normalize(means, std)])
 
-    training_dataset = datasets.ImageFolder(args.data_directory, transform=train_transforms)
+    data_dir = args.data_directory
+    train_dir = data_dir + '/train'
+    valid_dir = data_dir + '/valid'
 
+    training_dataset = datasets.ImageFolder(train_dir, transform=train_transforms)
     training_dataloader = torch.utils.data.DataLoader(training_dataset, batch_size=batch_size, shuffle=True)
+
+    valid_dataset = datasets.ImageFolder(valid_dir, transform=valid_transforms)
+    valid_dataloader = torch.utils.data.DataLoader(valid_dataset, batch_size=64)
 
     # Start with CPU
     device = torch.device("cpu")
@@ -44,7 +48,6 @@ def main():
     else:
         print("Using CPU.")
 
-    # TODO [VK]: Select the training model based on input
     model = models.__dict__[args.arch](pretrained=True)
 
     input_size = model.classifier[0].in_features
@@ -53,7 +56,6 @@ def main():
     for param in model.parameters():
         param.requires_grad = False
 
-    # TODO [VK] These should become dynamic
     model_classifier = nn.Sequential(nn.Linear(input_size, args.hidden_units),
                                      nn.ReLU(),
                                      nn.Dropout(0.5),
@@ -71,45 +73,53 @@ def main():
 
     # TODO The training loss, validation loss, and validation accuracy are printed out as a network trains
 
+    epochs = args.epochs
+    steps = 0
+    running_loss = 0
     print_every = 5
-    for epoch in range(args.epochs):
-        epoch_loss = 0
-        prev_chk = 0
-        total = 0
-        correct = 0
-        print(f'\nEpoch {epoch + 1} of {args.epochs}\n----------------------------')
-        for batch_index, (images, labels) in enumerate(training_dataloader):
-            images = images.to(device)
-            labels = labels.to(device)
+    for epoch in range(epochs):
+        for inputs, labels in training_dataloader:
+            steps += 1
+            # Move input and label tensors to the default device
+            inputs, labels = inputs.to(device), labels.to(device)
 
             optimizer.zero_grad()
 
-            outputs = model.forward(images)
-
-            loss = criterion(outputs, labels)
+            logps = model.forward(inputs)
+            loss = criterion(logps, labels)
             loss.backward()
             optimizer.step()
 
-            # Keep a running total of loss for
-            # this epoch
-            epoch_loss += loss.item()
+            running_loss += loss.item()
 
-            # Accuracy
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+            if steps % print_every == 0:
+                val_loss = 0
+                accuracy = 0
+                model.eval()
+                with torch.no_grad():
+                    for inputs, labels in valid_dataloader:
+                        inputs, labels = inputs.to(device), labels.to(device)
+                        logps = model.forward(inputs)
+                        batch_loss = criterion(logps, labels)
 
-            # Keep a running total of loss for
-            # this epoch
-            itr = (batch_index + 1)
-            if itr % print_every == 0:
-                avg_loss = f'avg. loss: {epoch_loss / itr:.4f}'
-                acc = f'accuracy: {(correct / total) * 100:.2f}%'
-                print(f'  Batches {prev_chk:03} to {itr:03}: {avg_loss}, {acc}.')
-                prev_chk = (batch_index + 1)
+                        val_loss += batch_loss.item()
+
+                        # Calculate accuracy
+                        ps = torch.exp(logps)
+                        top_p, top_class = ps.topk(1, dim=1)
+                        equals = top_class == labels.view(*top_class.shape)
+                        accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
+
+                print(f"Epoch {epoch + 1}/{epochs}.. "
+                      f"Train loss: {running_loss / print_every:.3f}.. "
+                      f"Validation loss: {val_loss / len(valid_dataloader):.3f}.. "
+                      f"Validation accuracy: {accuracy / len(valid_dataloader):.3f}")
+                running_loss = 0
+                model.train()
 
     print('Saving')
 
+    model.class_to_idx = training_dataset.class_to_idx
     checkpoint = {'input_size': input_size,
                   'output_size': 102,
                   'arch': args.arch,
