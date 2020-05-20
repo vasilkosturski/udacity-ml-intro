@@ -71,8 +71,6 @@ def main():
 
     model.to(device)
 
-    # TODO The training loss, validation loss, and validation accuracy are printed out as a network trains
-
     epochs = args.epochs
     steps = 0
     running_loss = 0
