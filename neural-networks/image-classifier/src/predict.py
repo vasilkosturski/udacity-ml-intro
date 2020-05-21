@@ -60,10 +60,6 @@ def load_checkpoint(device, file='checkpoint.pth'):
 
 
 def process_image(image):
-    ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
-        returns an Numpy array
-    '''
-
     size = 256, 256
     image.thumbnail(size)
 
@@ -96,7 +92,6 @@ def process_image(image):
 def predict(device, image_path, model, topk=5):
     flower = Image.open(image_path)
     with torch.no_grad():
-        # set to evaluation mode..
         model.eval()
 
         flower_input = process_image(flower)
@@ -105,7 +100,6 @@ def predict(device, image_path, model, topk=5):
 
         output = model.forward(flower_input)
         top_prob, top_labels = torch.topk(output, topk)
-        # Calculate the exponential
         top_prob = top_prob.exp()
 
         idx_to_class = {y: x for x, y in model.class_to_idx.items()}
