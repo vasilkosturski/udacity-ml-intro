@@ -98,14 +98,27 @@ def predict(device, image_path, model, topk=5):
     with torch.no_grad():
         # set to evaluation mode..
         model.eval()
+
         flower_input = process_image(flower)
         flower_input = flower_input.to(device)
         flower_input = flower_input.unsqueeze_(0)
-        output = model.forward(flower_input)
-        ps = torch.exp(output)
-        top_k, top_class = ps.topk(topk, dim=1)
 
-        return top_k, top_class
+        output = model.forward(flower_input)
+        top_prob, top_labels = torch.topk(output, topk)
+        # Calculate the exponential
+        top_prob = top_prob.exp()
+
+        idx_to_class = {y: x for x, y in model.class_to_idx.items()}
+
+        mapped_classes = list()
+
+        top_labels = top_labels.cpu()
+        top_prob = top_prob.cpu()
+
+        for label in top_labels.numpy()[0]:
+            mapped_classes.append(idx_to_class[label])
+
+        return top_prob.numpy()[0], mapped_classes
 
 
 if __name__ == '__main__':
