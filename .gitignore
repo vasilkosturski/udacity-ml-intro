@@ -1,1 +1,7 @@
 neural-networks/image-classifier/src/flowers/
+unsupervised-learning/creating-customer-segments/Udacity_CUSTOMERS_Subset.csv
+unsupervised-learning/creating-customer-segments/Udacity_AZDIAS_Subset.csv
+unsupervised-learning/creating-customer-segments/AZDIAS_Feature_Summary.csv
+unsupervised-learning/creating-customer-segments/Data_Dictionary.md
+unsupervised-learning/creating-customer-segments/.ipynb_checkpoints/Identify_Customer_Segments-checkpoint.ipynb
+neural-networks/image-classifier/src/checkpoint.pth
